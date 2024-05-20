@@ -10,14 +10,13 @@ import last.demo.Room.dto.utils.RoomWaitingInfoDto;
 import last.demo.Room.entity.RoomEntity;
 import last.demo.Room.entity.RoomMemberEntity;
 import last.demo.Room.entity.RoomWaitingEntity;
-import last.demo.Room.repository.RoomMemberRepository;
-import last.demo.Room.repository.RoomRepository;
+import last.demo.MyPage.repository.RoomMemberRepository;
+import last.demo.MyPage.repository.RoomRepository;
 import last.demo.Room.repository.RoomWaitingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -207,6 +206,25 @@ public class RoomService {
         if(OptionalRoomWaitingEntity.isPresent()){
             RoomWaitingEntity roomWaitingEntity = OptionalRoomWaitingEntity.get();
             roomWaitingRepository.delete(roomWaitingEntity);
+        }
+    }
+
+    //
+    public void bombRoom(String roomMemberId, String roomId){
+        RoomMemberEntity AdminRoomMember = roomMemberRepository.findById(Long.parseLong(roomMemberId))
+                .orElseThrow(()->new RuntimeException("Room Admin not found"));
+        List<RoomMemberEntity> roomMemberEntities = roomMemberRepository.findAllRoomMemberByRoomId(Long.parseLong(roomId));
+
+        if(AdminRoomMember.getType()) {
+            if(roomMemberEntities.size()==1) {
+                roomRepository.deleteById(AdminRoomMember.getRoomMemberId());
+                roomMemberRepository.deleteById(AdminRoomMember.getRoomMemberId());
+                System.out.println("Room is bombed");
+            }else{
+                System.out.println("Room is not Empty");
+            }
+        }else{
+            System.out.println("You are not Admin");
         }
     }
 }

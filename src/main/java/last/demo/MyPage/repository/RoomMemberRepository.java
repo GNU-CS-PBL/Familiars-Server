@@ -1,4 +1,4 @@
-package last.demo.Room.repository;
+package last.demo.MyPage.repository;
 
 import last.demo.Room.entity.RoomEntity;
 import last.demo.Room.entity.RoomMemberEntity;
@@ -21,5 +21,5 @@ public interface RoomMemberRepository extends JpaRepository<RoomMemberEntity, Lo
 
     Optional<RoomMemberEntity> findByRoomIdAndUserId(Long roomId, Long userId);
 
-
+    List<RoomMemberEntity> findAllRoomMemberByRoomId(Long RoomId);
 }

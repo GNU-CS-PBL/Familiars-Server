@@ -6,7 +6,6 @@ import last.demo.Room.dto.utils.*;
 import last.demo.Room.dto.RoomDto;
 import last.demo.Room.dto.RoomMemberDto;
 import last.demo.Room.entity.RoomEntity;
-import last.demo.Room.entity.RoomWaitingEntity;
 import last.demo.Room.service.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -260,5 +259,18 @@ public class RoomController {
             return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST); // 400 응답코드 반환
         }
     }
-
+    //
+    @Autowired
+    public RoomController(RoomService roomService){
+        this.roomService=roomService;
+    }
+    @DeleteMapping(value = "/bombRoom")
+    public ResponseEntity<String> bombRoom(@RequestBody Map<String, String> requestData) {
+        try {
+            roomService.bombRoom(requestData.get("roomMemberId"), requestData.get("roomId"));
+            return ResponseEntity.status(HttpStatus.OK).body("Bomb Room successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to Bomb Room");
+        }
+    }
 }
