@@ -11,7 +11,7 @@ import last.demo.Post.entity.PostTagEntity;
 import last.demo.Post.repository.PostRepository;
 import last.demo.Post.repository.PostTagRepository;
 import last.demo.Room.entity.RoomMemberEntity;
-import last.demo.Room.repository.RoomMemberRepository;
+import last.demo.MyPage.repository.RoomMemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
