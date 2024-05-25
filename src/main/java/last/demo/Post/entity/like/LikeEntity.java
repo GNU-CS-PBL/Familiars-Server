@@ -15,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class LikeEntity {
+public class LikeEntity { // 게시글 1개당 여러개의 LikeEntity가 존재
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

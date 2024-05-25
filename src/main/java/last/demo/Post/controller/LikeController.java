@@ -29,7 +29,8 @@ public class LikeController {
     public ResponseEntity<Map<String, Object>> addLikeOrCancelLikeToPost(@RequestHeader("Authorization") String jwtAccessToken,
                                                                          @RequestParam("roomId") Long roomId,
                                                                          @RequestParam("postId") Long postId
-                                                                         ) {
+                                                                         )
+    {
         // 사용자 UID를 추출
         // 게시글과 사용자 태그를 같이 수정
         String jwtToken = jwtAccessToken.substring(7);  // jwtAccessToken으로부터 사용자 UID를 추출합니다.

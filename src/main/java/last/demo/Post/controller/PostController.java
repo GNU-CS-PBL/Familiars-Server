@@ -2,10 +2,16 @@ package last.demo.Post.controller;
 
 import last.demo.OAuth.jwt.JwtTokenValidator;
 import last.demo.Post.dto.post.PostDto;
+import last.demo.Post.dto.post.utils.PostLoadAllDto;
 import last.demo.Post.dto.post.utils.PostTagAllDto;
 import last.demo.Post.entity.PostEntity;
 import last.demo.Post.service.PostService;
+import last.demo.Room.dto.utils.RoomLoadAllDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -28,6 +34,7 @@ public class PostController {
     // roomId는 param으로 받는다.
     // '태그될 사용자들의 UID 값' + 게시글 작성내용들을 DTO로 받는다.
     // postId는 추출
+
     // 게시글 생성 & 사용자 태그 생성
     @PostMapping(value = "/api/post")
     public ResponseEntity<String> CreatePost(@RequestHeader("Authorization") String jwtAccessToken,
@@ -40,7 +47,6 @@ public class PostController {
             // jwtAccessToken으로부터 사용자 UID를 추출합니다.
             String jwtToken = jwtAccessToken.substring(7);
             Long userId = jwtTokenValidator.getUserIdFromRefreshToken(jwtToken);
-            System.out.println("사용자 고유번호" + userId);
 
             // PostDto에 위의 값들을 담아 저장한다. -> 해당 postId 즉, PK값을 추출
             postDto.setRoomId(roomId);
@@ -144,13 +150,15 @@ public class PostController {
 
     //게시글 전체 조회 (in 특정 방)----------------------------------------------------------------------------------------
     //(클라이언트는 요청시 page 값을 같이 param 으로 전달해야한다. 안할시 default 값은 page = 0 이다.)
-//    @GetMapping(value = "/api/post")
-//    public ResponseEntity<Map<String, Object>> getAllPostsInTheRoom(@RequestParam("roomId") Long roomId ,
-//                                                                    @PageableDefault(size = 8, sort = "postId", direction = Sort.Direction.DESC) Pageable pageable) {
-//        Page<RoomLoadAllDto> roomLoadAllDtoList = postService.postFindAll(pageable);  //서비스 객체에서 조회한 데이터 여러개를 DTO 객체에 담아서 List 자료구조에 주입
-//        Map<String, Object> response = new HashMap<>();
-//        response.put("boardTotalList", roomLoadAllDtoList.getContent());
-//        return ResponseEntity.ok(response); //이 코드는 맵 객체(response)를 반환합니다.
-//    }                                       // 클라이언트는 이 데이터를 JSON 형식으로 받아 사용할 수 있습니다.
+    @GetMapping(value = "/api/post")
+    public ResponseEntity<Map<String, Object>> getAllPostsInTheRoom(@RequestParam("roomId") Long roomId ,
+                                                                    @PageableDefault(size = 10, sort = "postId", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        // postLoadAllDtoList 는 postLoadAllDto 들을 리스트 형태로 가지고 있는 자료구조
+        Page<PostLoadAllDto> postLoadAllDtoList = postService.findAllPostsByRoomId(roomId, pageable);  //서비스 객체에서 조회한 데이터 여러개를 DTO 객체에 담아서 List 자료구조에 주입
+        Map<String, Object> response = new HashMap<>();
+        response.put("boardTotalList", postLoadAllDtoList.getContent());
+        return ResponseEntity.ok(response); //이 코드는 맵 객체(response)를 반환합니다.
+    }                                       // 클라이언트는 이 데이터를 JSON 형식으로 받아 사용할 수 있습니다.
 
 }

@@ -5,16 +5,22 @@ import last.demo.OAuth.repository.UserRepository;
 import last.demo.Post.dto.post.PostDto;
 import last.demo.Post.dto.post.PostTagDto;
 import last.demo.Post.dto.post.utils.PostImageDto;
+import last.demo.Post.dto.post.utils.PostLoadAllDto;
 import last.demo.Post.dto.post.utils.PostTagAllDto;
 import last.demo.Post.entity.PostEntity;
 import last.demo.Post.entity.PostTagEntity;
 import last.demo.Post.repository.PostRepository;
 import last.demo.Post.repository.PostTagRepository;
+import last.demo.Room.dto.utils.RoomLoadAllDto;
 import last.demo.Room.entity.RoomMemberEntity;
 import last.demo.MyPage.repository.RoomMemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -29,7 +35,7 @@ public class PostService {
     private final PostTagRepository postTagRepository;
 
 
-    // 게시글을 저장하는 및 반환하는 메소드
+    // 게시글을 저장 및 반환하는 메소드
     public PostEntity savePostInfo(PostDto postDto) {
         PostEntity postEntity = PostEntity.toPostEntity(postDto); //DTO -> Entity 변환
         return postRepository.save(postEntity);
@@ -266,5 +272,48 @@ public class PostService {
     }
 
 
+    //게시글 전체 조회 (in 특정 방)
+    public Page<PostLoadAllDto> findAllPostsByRoomId(Long roomId, Pageable pageable) { // postLoadAllDto 리스트를 반환한다.
 
+
+        // #1. 특정 roomId 에 해당하는 모든 postEntity들을 10개씩 List형태로 불러온다.
+        Page<PostEntity> postEntityList = postRepository.findAllByRoomId(roomId,pageable);
+
+        // #2. 결과를 저장할 리스트
+        List<PostLoadAllDto> postLoadAllDtoList = new ArrayList<>();
+
+        // #3. for문을 활용 : PostEntityList 내용들을 -> PostLoadAllDtoList 로 옮기기
+        for (PostEntity postEntity : postEntityList.getContent()) {
+            // #3-1 : 옮길 postLoadAllDto 객체 생성
+            PostLoadAllDto postLoadAllDto = new PostLoadAllDto();
+
+            // #3-2 : postEntity안의 userId를 이용해서, userEntity에서 name과 Image를 가져와서 postLoadAllDto 요소에 대입
+            Optional<UserEntity> optionalUserEntity= userRepository.findById(postEntity.getUserId());
+            if (optionalUserEntity.isPresent()) {
+                UserEntity userEntity = optionalUserEntity.get();
+                postLoadAllDto.setName(userEntity.getName());
+                postLoadAllDto.setImage(userEntity.getImage());
+            }
+            // #3-3 : postId에 해당하는 모든 postTagEntity를 찾아서 -> taggedUserId를 모두 꺼내서 postLoadAllDto에 List형식으로 넣기
+            List<PostTagEntity> postTagEntityList = postTagRepository.findByPostId(postEntity.getPostId());
+            for (PostTagEntity postTagEntity : postTagEntityList) {
+                postLoadAllDto.addTaggedUserId(postTagEntity.getTaggedUserId()); // 사용자 태그를 추가하는 함수를 적용
+            }
+
+            // #3-4 : postEntity안의 나머지 요소들도, postLoadAllDto에 대입
+            postLoadAllDto.setTitle(postEntity.getTitle());
+            postLoadAllDto.setContent(postEntity.getContent());
+            postLoadAllDto.setTotalLikeCount(postEntity.getTotalLikeCount());
+            postLoadAllDto.setTotalCommentCount(null); // -----------------------------> 댓글Entity  만들면 수정해주기
+            postLoadAllDto.setCreateDate(postEntity.getCreateDate());
+            postLoadAllDto.setModifyDate(postEntity.getModifyDate());
+            postLoadAllDto.setPostImage(postEntity.getPostImage());
+
+
+            postLoadAllDtoList.add(postLoadAllDto); // 결과 리스트에 추가
+        }
+
+        // 결과 리스트를 페이지 형태로 반환
+        return  new PageImpl<>(postLoadAllDtoList, pageable, postEntityList.getTotalElements());
+    }
 }

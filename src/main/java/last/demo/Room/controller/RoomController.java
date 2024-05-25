@@ -24,6 +24,7 @@ import java.util.Map;
 @Controller
 public class RoomController {
 
+    // 서비스 관련 출력
     @Autowired
     private RoomService roomService;
 

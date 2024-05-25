@@ -1,6 +1,5 @@
 package last.demo.Room.dto.utils;
 
-import last.demo.Room.dto.RoomDto;
 import last.demo.Room.entity.RoomEntity;
 import lombok.*;
 
