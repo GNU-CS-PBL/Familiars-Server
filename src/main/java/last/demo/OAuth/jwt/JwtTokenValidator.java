@@ -53,19 +53,18 @@ public class JwtTokenValidator { // jwtAccessToken 유효성 검증
             // Base64로 디코딩된 키 생성
             Key key = Keys.hmacShaKeyFor(keyBytes);
 
-            System.out.println("출력1");
             // JWT 토큰 파싱 및 본문(클레임) 획득
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
                     .parseClaimsJws(jwtAccessToken)
                     .getBody();
-            System.out.println("출력2");
+
             // 클레임 존재 여부 확인
             if (!claims.containsKey("userId")) {
                 throw new IllegalArgumentException("Token does not contain userId claim");
             }
-            System.out.println("출력3");
+
 
             // 클레임 값의 유효성 검사 및 안전한 형변환
             Object userIdObject = claims.get("userId");
@@ -73,10 +72,10 @@ public class JwtTokenValidator { // jwtAccessToken 유효성 검증
                 throw new IllegalArgumentException("userId claim is not of number type");
             }
 
-            System.out.println("출력4");
+
             // 클레임 값의 유효성 검사 및 안전한 형변환
             Number userIdNumber = (Number) userIdObject;
-            System.out.println("출력5");
+
             return userIdNumber.longValue();
         } catch (JwtException e) {
             throw e; // 예외 다시 던지기

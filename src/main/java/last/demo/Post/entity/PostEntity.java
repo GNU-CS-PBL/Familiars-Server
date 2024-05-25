@@ -56,6 +56,7 @@ public class PostEntity {
         PostEntity postEntity = new PostEntity();
 
         postEntity.setPostId(postDto.getPostId() != null ? postDto.getPostId() : 0L);
+        postEntity.setUserId(postDto.getUserId() != null ? postDto.getUserId() : 0L);
         postEntity.setRoomId(postDto.getRoomId() != null ? postDto.getRoomId() : 0L);
         postEntity.setRoomMemberId(postDto.getUserId() != null ? postDto.getUserId() : 0L);
         postEntity.setContent(postDto.getContent() != null ? postDto.getContent() : null);

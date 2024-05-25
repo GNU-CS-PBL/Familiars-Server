@@ -28,15 +28,5 @@ public class PostDto {
     private Timestamp createDate; // 게시글 작성 시간
     private Timestamp modifyDate; // 게시글 수정 시간
 
-//    @OneToMany(mappedBy = "postId", cascade = CascadeType.ALL) //postId를 이용해서 두 엔티티가 1:N 관계를 맺는다.
-//    private List<ReactionEntity> reactionEntities = new ArrayList<>(); //reactionEntities는 reactionEntity들의 리스트
-//
-//    @OneToMany(mappedBy = "postId", cascade = CascadeType.ALL)
-//    private List<PostCommentEntity> postCommentEntities = new ArrayList<>();
-//
-//    @OneToMany(mappedBy = "postId", cascade = CascadeType.ALL)
-//    private List<PostTagEntity> postTagEntities = new ArrayList<>();
-
-
 
 }
