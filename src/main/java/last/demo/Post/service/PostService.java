@@ -9,9 +9,8 @@ import last.demo.Post.dto.post.utils.PostLoadAllDto;
 import last.demo.Post.dto.post.utils.PostTagAllDto;
 import last.demo.Post.entity.PostEntity;
 import last.demo.Post.entity.PostTagEntity;
-import last.demo.Post.repository.PostRepository;
-import last.demo.Post.repository.PostTagRepository;
-import last.demo.Room.dto.utils.RoomLoadAllDto;
+import last.demo.Post.repository.post.PostRepository;
+import last.demo.Post.repository.post.PostTagRepository;
 import last.demo.Room.entity.RoomMemberEntity;
 import last.demo.MyPage.repository.RoomMemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +36,8 @@ public class PostService {
 
     // 게시글을 저장 및 반환하는 메소드
     public PostEntity savePostInfo(PostDto postDto) {
+        postDto.setCreateDate(new Timestamp(System.currentTimeMillis()));
+        postDto.setModifyDate(new Timestamp(System.currentTimeMillis()));
         PostEntity postEntity = PostEntity.toPostEntity(postDto); //DTO -> Entity 변환
         return postRepository.save(postEntity);
     }
@@ -83,7 +84,7 @@ public class PostService {
             postEntity.setTitle(postDto.getTitle()); // 추출한 roomEntity를 업데이트 한다.
             postEntity.setContent(postDto.getContent()); // 추출한 roomEntity를 업데이트 한다.
             postEntity.setPostImage(postDto.getPostImage()); // 추출한 roomEntity를 업데이트 한다.
-
+            postEntity.setModifyDate(new Timestamp(System.currentTimeMillis()));
             postRepository.save(postEntity); // 변경된 Entity를 저장한다.
 
             //----------------------------------------------------------------------------------------
@@ -289,6 +290,49 @@ public class PostService {
 
             // #3-2 : postEntity안의 userId를 이용해서, userEntity에서 name과 Image를 가져와서 postLoadAllDto 요소에 대입
             Optional<UserEntity> optionalUserEntity= userRepository.findById(postEntity.getUserId());
+            if (optionalUserEntity.isPresent()) {
+                UserEntity userEntity = optionalUserEntity.get();
+                postLoadAllDto.setName(userEntity.getName());
+                postLoadAllDto.setImage(userEntity.getImage());
+            }
+            // #3-3 : postId에 해당하는 모든 postTagEntity를 찾아서 -> taggedUserId를 모두 꺼내서 postLoadAllDto에 List형식으로 넣기
+            List<PostTagEntity> postTagEntityList = postTagRepository.findByPostId(postEntity.getPostId());
+            for (PostTagEntity postTagEntity : postTagEntityList) {
+                postLoadAllDto.addTaggedUserId(postTagEntity.getTaggedUserId()); // 사용자 태그를 추가하는 함수를 적용
+            }
+
+            // #3-4 : postEntity안의 나머지 요소들도, postLoadAllDto에 대입
+            postLoadAllDto.setTitle(postEntity.getTitle());
+            postLoadAllDto.setContent(postEntity.getContent());
+            postLoadAllDto.setTotalLikeCount(postEntity.getTotalLikeCount());
+            postLoadAllDto.setTotalCommentCount(null); // -----------------------------> 댓글Entity  만들면 수정해주기
+            postLoadAllDto.setCreateDate(postEntity.getCreateDate());
+            postLoadAllDto.setModifyDate(postEntity.getModifyDate());
+            postLoadAllDto.setPostImage(postEntity.getPostImage());
+
+
+            postLoadAllDtoList.add(postLoadAllDto); // 결과 리스트에 추가
+        }
+
+        // 결과 리스트를 페이지 형태로 반환
+        return  new PageImpl<>(postLoadAllDtoList, pageable, postEntityList.getTotalElements());
+    }
+
+    //게시글 전체 조회 (in 마이페이지)
+    public Page<PostLoadAllDto> findAllPostsByUserId(Long userId, Pageable pageable) {
+        // #1. 특정 userId 에 해당하는 모든 postEntity들을 10개씩 List형태로 불러온다.
+        Page<PostEntity> postEntityList = postRepository.findAllByUserId(userId,pageable);
+
+        // #2. 결과를 저장할 리스트
+        List<PostLoadAllDto> postLoadAllDtoList = new ArrayList<>();
+
+        // #3. for문을 활용 : PostEntityList 내용들을 -> PostLoadAllDtoList 로 옮기기
+        for (PostEntity postEntity : postEntityList.getContent()) {
+            // #3-1 : 옮길 postLoadAllDto 객체 생성
+            PostLoadAllDto postLoadAllDto = new PostLoadAllDto();
+
+            // #3-2 : postEntity안의 userId를 이용해서, userEntity에서 name과 Image를 가져와서 postLoadAllDto 요소에 대입
+            Optional<UserEntity> optionalUserEntity= userRepository.findById(userId);
             if (optionalUserEntity.isPresent()) {
                 UserEntity userEntity = optionalUserEntity.get();
                 postLoadAllDto.setName(userEntity.getName());

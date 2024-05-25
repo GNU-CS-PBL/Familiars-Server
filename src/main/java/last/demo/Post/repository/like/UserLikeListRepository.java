@@ -1,4 +1,4 @@
-package last.demo.Post.repository;
+package last.demo.Post.repository.like;
 
 import last.demo.Post.entity.like.UserLikeListEntity;
 import org.springframework.data.jpa.repository.JpaRepository;

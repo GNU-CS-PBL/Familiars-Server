@@ -1,15 +1,15 @@
 package last.demo.Post.service;
 
-import last.demo.Post.dto.like.LikeDto;
 import last.demo.Post.entity.PostEntity;
 import last.demo.Post.entity.like.LikeEntity;
 import last.demo.Post.entity.like.UserLikeListEntity;
-import last.demo.Post.repository.LikeRepository;
-import last.demo.Post.repository.PostRepository;
-import last.demo.Post.repository.UserLikeListRepository;
+import last.demo.Post.repository.like.LikeRepository;
+import last.demo.Post.repository.post.PostRepository;
+import last.demo.Post.repository.like.UserLikeListRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,6 +22,8 @@ public class LikeService {
     private final PostRepository postRepository;
     private final UserLikeListRepository userLikeListRepository;
 
+
+    // 좋아요
     public void addLikeOrCancelLikeToPost(Long roomId, Long userId, Long postId) {
 
         // 해당 게시글 Entity를 가져온다.
@@ -74,6 +76,7 @@ public class LikeService {
 
                     // 해당 likeEntity를 하나 생성해서 저장하고,
                     LikeEntity likeEntity1 = new LikeEntity();
+                    likeEntity1.setCreateDate(new Timestamp(System.currentTimeMillis()));
                     likeEntity1.setPostId(postId);
                     likeEntity1.setUserId(userId);
                     likeEntity1.setRoomId(roomId);
@@ -98,6 +101,7 @@ public class LikeService {
 
                 // 2. 새로운 LikeEntity 객체를 생성 & postEntity에 저장
                 LikeEntity newLikeEntity = new LikeEntity();
+                newLikeEntity.setCreateDate(new Timestamp(System.currentTimeMillis()));
                 newLikeEntity.setPostId(postId);
                 newLikeEntity.setUserId(userId);
                 newLikeEntity.setRoomId(roomId);

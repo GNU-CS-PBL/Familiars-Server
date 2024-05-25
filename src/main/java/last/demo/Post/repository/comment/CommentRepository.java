@@ -1,0 +1,9 @@
+package last.demo.Post.repository.comment;
+
+import last.demo.Post.entity.comment.PostCommentEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface CommentRepository extends JpaRepository<PostCommentEntity, Long> {
+}

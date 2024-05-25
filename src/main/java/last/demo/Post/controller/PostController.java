@@ -1,10 +1,12 @@
 package last.demo.Post.controller;
 
 import last.demo.OAuth.jwt.JwtTokenValidator;
+import last.demo.Post.dto.comment.PostCommentDto;
 import last.demo.Post.dto.post.PostDto;
 import last.demo.Post.dto.post.utils.PostLoadAllDto;
 import last.demo.Post.dto.post.utils.PostTagAllDto;
 import last.demo.Post.entity.PostEntity;
+import last.demo.Post.entity.comment.PostCommentEntity;
 import last.demo.Post.service.PostService;
 import last.demo.Room.dto.utils.RoomLoadAllDto;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -160,5 +162,30 @@ public class PostController {
         response.put("boardTotalList", postLoadAllDtoList.getContent());
         return ResponseEntity.ok(response); //이 코드는 맵 객체(response)를 반환합니다.
     }                                       // 클라이언트는 이 데이터를 JSON 형식으로 받아 사용할 수 있습니다.
+
+    //게시글 전체 조회 (in 마이 페이지)----------------------------------------------------------------------------------------
+    // 사용자 UID가 필요하다. -> postEntity에서 사용자 UID로 조회한 모든 게시글을 가져온다.
+    @GetMapping(value = "/api/post/myPage")
+    public ResponseEntity<Map<String, Object>> getAllPostsInMyPage(@RequestHeader("Authorization") String jwtAccessToken,
+                                                                    @PageableDefault(size = 10, sort = "postId", direction = Sort.Direction.DESC) Pageable pageable) {
+        try {
+            // jwtAccessToken으로부터 사용자 UID를 추출합니다.
+            String jwtToken = jwtAccessToken.substring(7);
+            Long userId = jwtTokenValidator.getUserIdFromRefreshToken(jwtToken);
+
+            // postLoadAllDtoList 는 postLoadAllDto 들을 리스트 형태로 가지고 있는 자료구조
+            Page<PostLoadAllDto> postLoadAllDtoList = postService.findAllPostsByUserId(userId, pageable);  //서비스 객체에서 조회한 데이터 여러개를 DTO 객체에 담아서 List 자료구조에 주입
+            Map<String, Object> response = new HashMap<>();
+            response.put("boardTotalList", postLoadAllDtoList.getContent());
+            return ResponseEntity.ok(response); //이 코드는 맵 객체(response)를 반환합니다.
+
+        } catch (Exception e) {
+            // 예외가 발생한 경우, 에러 응답을 반환합니다.
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "게시물을 조회하는 도중에 문제가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+
+    }
 
 }

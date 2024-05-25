@@ -1,4 +1,4 @@
-package last.demo.Post.repository;
+package last.demo.Post.repository.post;
 
 import last.demo.Post.entity.PostTagEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
