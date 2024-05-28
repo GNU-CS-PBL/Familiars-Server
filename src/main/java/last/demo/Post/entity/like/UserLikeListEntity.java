@@ -37,16 +37,4 @@ public class UserLikeListEntity { // 사용자별, 좋아요를 누른 게시글
         this.postId.remove(postId);
     }
 
-
-    //특정 게시글 id를 board_give_id 리스트에서 조회하여 반환 하는 메소드
-    public boolean findByPostId(Long postId) {
-        // for-each 문을 통해서 게시글을 찾는다.
-        for (Long post_Id : this.postId) {
-            //게시글이 존재한다면
-            if (post_Id.equals(postId)) {
-                return true;
-            }
-        } return false;  // 게시글이 존재하지 않으면 0L 반환
-    }
-
 }

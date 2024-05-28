@@ -9,6 +9,10 @@ import last.demo.Post.dto.post.utils.PostLoadAllDto;
 import last.demo.Post.dto.post.utils.PostTagAllDto;
 import last.demo.Post.entity.PostEntity;
 import last.demo.Post.entity.PostTagEntity;
+import last.demo.Post.entity.like.LikeEntity;
+import last.demo.Post.entity.like.UserLikeListEntity;
+import last.demo.Post.repository.like.LikeRepository;
+import last.demo.Post.repository.like.UserLikeListRepository;
 import last.demo.Post.repository.post.PostRepository;
 import last.demo.Post.repository.post.PostTagRepository;
 import last.demo.Room.entity.RoomMemberEntity;
@@ -32,6 +36,8 @@ public class PostService {
     private final RoomMemberRepository roomMemberRepository;
     private final UserRepository userRepository;
     private final PostTagRepository postTagRepository;
+    private final LikeRepository likeRepository;
+    private final UserLikeListRepository userLikeListRepository;
 
 
     // 게시글을 저장 및 반환하는 메소드
@@ -122,6 +128,7 @@ public class PostService {
     }
 
 
+
     // 게시글을 삭제하는 메소드(1)
     public void deletePostInfo(Long postId) {
     // roomId를 사용해서 roomEntity를 조회한다.
@@ -140,9 +147,13 @@ public class PostService {
         }
     }
 
+
+
     // 게시글을 삭제하는 메소드(1-2) -----> 게시글의 postId를 왜래키로 사용하는 다른 Entity들을 찾아 전부 삭제 하는 코드
     public void deletePostRelatedInfo(Long postId) {
-        // postId를 사용하여 postTagEntity를 조회한다.
+
+
+        // #1. 사용자 태그 테이블 삭제 -----> postId를 사용하여 postTagEntity를 조회한다.
         List<PostTagEntity> postTagEntities = postTagRepository.findByPostId(postId);
 
         // 조회된 postTagEntity가 있는지 확인
@@ -155,6 +166,31 @@ public class PostService {
             // postId에 해당하는 사용자 태그 Entity가 존재하지 않을 경우 예외 처리를 수행합니다.
             throw new RuntimeException("해당 postId에 해당하는 사용자 태그 Entity가 존재하지 않습니다.");
         }
+
+
+        // #2. 좋아요 테이블 삭제
+        //LikeEntity와 PostEntity 간에 양방향 관계가 설정되어 있습니다.
+        //이를 활용하여 LikeEntity를 조회할 때 postId를 사용하는 대신 PostEntity를 이용할 수 있습니다.
+        List<LikeEntity> likeEntities = likeRepository.findByPostEntity_PostId(postId);
+        if (!likeEntities.isEmpty()) {
+            for (LikeEntity likeEntity : likeEntities) {
+                likeRepository.delete(likeEntity);
+            }
+        } else {
+            throw new RuntimeException("해당 postId에 해당하는 좋아요 Entity가 존재하지 않습니다.");
+        }
+
+        // #2-2. 사용자 좋아요 리스트 테이블 삭제
+        List<UserLikeListEntity> userLikeListEntities = userLikeListRepository.findByPostIdContains(postId);
+        if (!userLikeListEntities.isEmpty()) {
+            for (UserLikeListEntity userLikeListEntity : userLikeListEntities) {
+                userLikeListRepository.delete(userLikeListEntity);
+            }
+        } else {
+            throw new RuntimeException("해당 postId에 해당하는 사용자 좋아요 리스트 Entity가 존재하지 않습니다.");
+        }
+
+
     }
 
 
@@ -243,7 +279,7 @@ public class PostService {
 
             // PostImageDto에서 이미지 리스트를 가져와서 PostEntity의 이미지 리스트에 추가한다.
             postEntity.getPostImage().addAll(postImageDto.getPostImage());
-
+            postEntity.setModifyDate(new Timestamp(System.currentTimeMillis()));
             postRepository.save(postEntity); // 변경된 Entity를 저장한다.
 
         } else {
@@ -305,7 +341,7 @@ public class PostService {
             postLoadAllDto.setTitle(postEntity.getTitle());
             postLoadAllDto.setContent(postEntity.getContent());
             postLoadAllDto.setTotalLikeCount(postEntity.getTotalLikeCount());
-            postLoadAllDto.setTotalCommentCount(null); // -----------------------------> 댓글Entity  만들면 수정해주기
+            postLoadAllDto.setPostCommentCount(null); // -----------------------------> 댓글Entity  만들면 수정해주기
             postLoadAllDto.setCreateDate(postEntity.getCreateDate());
             postLoadAllDto.setModifyDate(postEntity.getModifyDate());
             postLoadAllDto.setPostImage(postEntity.getPostImage());
@@ -348,7 +384,7 @@ public class PostService {
             postLoadAllDto.setTitle(postEntity.getTitle());
             postLoadAllDto.setContent(postEntity.getContent());
             postLoadAllDto.setTotalLikeCount(postEntity.getTotalLikeCount());
-            postLoadAllDto.setTotalCommentCount(null); // -----------------------------> 댓글Entity  만들면 수정해주기
+            postLoadAllDto.setPostCommentCount(null); // -----------------------------> 댓글Entity  만들면 수정해주기
             postLoadAllDto.setCreateDate(postEntity.getCreateDate());
             postLoadAllDto.setModifyDate(postEntity.getModifyDate());
             postLoadAllDto.setPostImage(postEntity.getPostImage());

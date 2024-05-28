@@ -22,10 +22,6 @@ public class PostTagEntity {
     @Column
     private Long postId; // 게시물 ID
 
-    @ManyToOne(fetch = FetchType.LAZY) // ManyToOne 관계 설정
-    @JoinColumn(name = "postId", insertable = false, updatable = false) // PostEntity의 postId와 매핑
-    private PostEntity postEntity; // PostEntity를 참조하는 필드
-
     @Column
     private Long userId; // 태그 하는 사용자 UID
 
@@ -40,6 +36,11 @@ public class PostTagEntity {
 
     @Column
     private Timestamp modifyDate; // 게시물 태그 수정시간
+
+
+//    @ManyToOne(fetch = FetchType.LAZY) // ManyToOne 관계 설정
+//    @JoinColumn(name = "postId") // PostEntity의 postId와 매핑
+//    private PostEntity postEntity; // PostEntity를 참조하는 필드
 
 
     //DTO -> Entity

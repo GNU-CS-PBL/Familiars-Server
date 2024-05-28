@@ -32,27 +32,27 @@ public class LikeService {
         if(OptionalPostEntity.isPresent()){ // 게시글 엔티티가 존재하는 경우.
             PostEntity postEntity = OptionalPostEntity.get();
 
-            // 1. 현재 해당 게시글의 '총 좋아요 갯수'를 가져온다.
+            // #1. 현재 해당 게시글의 '총 좋아요 갯수'를 가져온다.
             Long currentLikeCount = Optional.ofNullable(postEntity.getTotalLikeCount()).orElse(0L);
 
-            // 2. 사용자 고유 번호를 사용해 userLikeListRepository (사용자 좋아요 리스트) 조회
+            // #2. 사용자 고유 번호를 사용해 userLikeListRepository (사용자 좋아요 리스트) 조회
             Optional<UserLikeListEntity> OptionalUserLikeListEntity = userLikeListRepository.findByUserId(userId);
 
             if(OptionalUserLikeListEntity.isPresent()){
                 UserLikeListEntity userLikeListEntity = OptionalUserLikeListEntity.get();
 
-                // 3. 게시글 번호 리스트 가져오기
+                // #3. 게시글 번호 리스트 가져오기
                 List<Long> postIdList = userLikeListEntity.getPostId();
                 Long targetPostId = postId; // 찾고자 하는 postId 입력
 
-                // 4. 게시글 목록에서, 해당 게시글 Id가 있는지 확인
+                // #4. 게시글 목록에서, 해당 게시글 Id가 있는지 확인
                 if (postIdList.contains(targetPostId)) {
-                    // postIdList 안에 targetPostId가 존재함
+                    // postIdList 안에 targetPostId가 존재함 -> 좋아요를 이미 누른 게시글이다.
                     userLikeListEntity.removeLikedPostId(postId); // 게시글 목록에서 해당 게시글 Id를 삭제
                     userLikeListRepository.save(userLikeListEntity); // 저장
 
                     // 해당 게시글 Id와 사용자 Id로 조회한 -> LikeEntity를 제거한다.
-                    Optional<LikeEntity> optionalLikeEntity = likeRepository.findByPostIdAndUserId(postId, userId);
+                    Optional<LikeEntity> optionalLikeEntity = likeRepository.findByPostEntityPostIdAndUserId(postId, userId);
                     if (optionalLikeEntity.isPresent()) {
                         LikeEntity likeEntity = optionalLikeEntity.get();
                         likeRepository.delete(likeEntity);
@@ -66,7 +66,6 @@ public class LikeService {
                     // 데이터 저장 및 '총 좋아요 갯수' 반환
                     postEntity.setTotalLikeCount(currentLikeCount); // 총 좋아요 갯수 업데이트
                     postRepository.save(postEntity); // 저장
-                    System.out.println("좋아요 취소");
 
                 } else {
                     // postIdList 안에 targetPostId가 존재하지 않음
@@ -77,7 +76,14 @@ public class LikeService {
                     // 해당 likeEntity를 하나 생성해서 저장하고,
                     LikeEntity likeEntity1 = new LikeEntity();
                     likeEntity1.setCreateDate(new Timestamp(System.currentTimeMillis()));
-                    likeEntity1.setPostId(postId);
+
+                    // 1:N 관계를 만족하는 PostEntity를 LikeEntity와 양방향 관계를 맺는 방법
+                    Optional<PostEntity> optionalPostEntity1 = postRepository.findById(postId);
+                    if (optionalPostEntity1.isPresent()){
+                        PostEntity postEntity1 = optionalPostEntity1.get();
+                        likeEntity1.setPostEntity(postEntity1);
+                    }
+
                     likeEntity1.setUserId(userId);
                     likeEntity1.setRoomId(roomId);
                     likeRepository.save(likeEntity1);
@@ -88,7 +94,6 @@ public class LikeService {
                     // 데이터 저장 및 '총 좋아요 갯수' 반환
                     postEntity.setTotalLikeCount(currentLikeCount); // 총 좋아요 갯수 업데이트
                     postRepository.save(postEntity); // 저장
-                    System.out.println("좋아요 추가1");
                 }
             } else {
                 // 사용자가 어떠한 게시글에도 좋아요를 안 누른 상태라면
@@ -102,7 +107,14 @@ public class LikeService {
                 // 2. 새로운 LikeEntity 객체를 생성 & postEntity에 저장
                 LikeEntity newLikeEntity = new LikeEntity();
                 newLikeEntity.setCreateDate(new Timestamp(System.currentTimeMillis()));
-                newLikeEntity.setPostId(postId);
+
+                // 1:N 관계를 만족하는 PostEntity를 LikeEntity와 양방향 관계를 맺는 방법
+                Optional<PostEntity> optionalPostEntity1 = postRepository.findById(postId);
+                if (optionalPostEntity1.isPresent()){
+                    PostEntity postEntity1 = optionalPostEntity1.get();
+                    newLikeEntity.setPostEntity(postEntity1);
+                }
+
                 newLikeEntity.setUserId(userId);
                 newLikeEntity.setRoomId(roomId);
                 likeRepository.save(newLikeEntity);
@@ -110,12 +122,10 @@ public class LikeService {
                 // postEntity의 currentLikeCount를 1추가해서 저장
                 currentLikeCount += 1;
 
-                // 데이터 저장 및 '총 좋아요 갯수' 반환
+                // '총 좋아요 갯수' 저장
                 postEntity.setTotalLikeCount(currentLikeCount); // 총 좋아요 갯수 업데이트
                 postRepository.save(postEntity); // 저장
-                System.out.println("좋아요 추가2");
             }
-
 
 
         }

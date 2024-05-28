@@ -2,6 +2,8 @@ package last.demo.Post.entity.comment;
 
 
 import jakarta.persistence.*;
+import last.demo.Post.dto.comment.ChildCommentDto;
+import last.demo.Post.dto.comment.PostCommentDto;
 import lombok.*;
 
 import java.sql.Timestamp;
@@ -44,4 +46,21 @@ public class ChildCommentEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_comment_id")
     private PostCommentEntity parentComment; // 부모 댓글
+
+
+    //DTO -> Entity
+    public static ChildCommentEntity toChildCommentEntity(ChildCommentDto childCommentDto) {
+        ChildCommentEntity childCommentEntity = new ChildCommentEntity();
+
+        childCommentEntity.setPostId(childCommentDto.getPostId() != null ? childCommentDto.getPostId() : 0L);
+        childCommentEntity.setUserId(childCommentDto.getUserId() != null ? childCommentDto.getUserId() : 0L);
+        childCommentEntity.setRoomId(childCommentDto.getRoomId() != null ? childCommentDto.getRoomId() : 0L);
+
+        childCommentEntity.setContent(childCommentDto.getContent() != null ? childCommentDto.getContent() : null);
+        childCommentEntity.setCreateDate(childCommentDto.getCreateDate() != null ? childCommentDto.getCreateDate() : null);
+        childCommentEntity.setModifyDate(childCommentDto.getModifyDate() != null ? childCommentDto.getModifyDate() : null);
+
+        return childCommentEntity;
+    }
+
 }

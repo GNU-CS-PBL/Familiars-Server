@@ -32,7 +32,6 @@ public class LikeController {
                                                                          )
     {
         // 사용자 UID를 추출
-        // 게시글과 사용자 태그를 같이 수정
         String jwtToken = jwtAccessToken.substring(7);  // jwtAccessToken으로부터 사용자 UID를 추출합니다.
         Long userId = jwtTokenValidator.getUserIdFromRefreshToken(jwtToken);
 

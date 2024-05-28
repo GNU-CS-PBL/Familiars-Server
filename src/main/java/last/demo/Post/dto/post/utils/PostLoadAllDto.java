@@ -32,7 +32,7 @@ public class PostLoadAllDto { // 게시글 전체 조회 DTO (in 특정 방)
     private String name; // 사용자 이름
 
     // 댓글 Entity 에서 가져오는 요소
-    private Long totalCommentCount; // 댓글 총 갯수
+    private Long PostCommentCount; // 부모댓글 총 갯수
 
     // postTagEntity에서 가져오는 요소
     private List<Long> taggedUserId  = new ArrayList<>(); // 게시글에 태그된 사용자 UID 리스트
