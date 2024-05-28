@@ -1,10 +1,12 @@
 package last.demo.Post.controller;
 
 import last.demo.OAuth.jwt.JwtTokenValidator;
+import last.demo.Post.dto.comment.PostCommentDto;
 import last.demo.Post.dto.post.PostDto;
 import last.demo.Post.dto.post.utils.PostLoadAllDto;
 import last.demo.Post.dto.post.utils.PostTagAllDto;
 import last.demo.Post.entity.PostEntity;
+import last.demo.Post.entity.comment.PostCommentEntity;
 import last.demo.Post.service.PostService;
 import last.demo.Room.dto.utils.RoomLoadAllDto;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +44,6 @@ public class PostController {
                                              @RequestBody PostDto postDto) throws Exception {
         try {
             //-------------------------------------- 게시물 생성--------------------------------------------------------
-
 
             // jwtAccessToken으로부터 사용자 UID를 추출합니다.
             String jwtToken = jwtAccessToken.substring(7);
@@ -105,8 +106,13 @@ public class PostController {
 
     // 게시글 삭제
     @DeleteMapping(value = "/api/post")
-    public ResponseEntity<Object> deletePostInfo(@RequestParam("postId") Long postId) {
+    public ResponseEntity<Object> deletePostInfo(@RequestHeader("Authorization") String jwtAccessToken,
+                                                 @RequestParam("postId") Long postId) {
         try {
+            // jwtAccessToken으로부터 사용자 UID를 추출합니다. -> 가능하다면 허가된 사용자
+            String jwtToken = jwtAccessToken.substring(7);
+            Long userId = jwtTokenValidator.getUserIdFromRefreshToken(jwtToken);
+
             //게시글을 바로 삭제하기에 앞서, 게시글 테이블의 postId를 왜래키로 사용하는 다른 Entity도 모두 삭제해줘야 한다.
             postService.deletePostRelatedInfo(postId);
 
@@ -129,8 +135,13 @@ public class PostController {
 
     // 태그될 사용자들 조회
     @GetMapping(value = "/api/postTag")
-    public ResponseEntity<Object> GetPostTagAll(@RequestParam("roomId") Long roomId) {
+    public ResponseEntity<Object> GetPostTagAll(@RequestHeader("Authorization") String jwtAccessToken,
+                                                @RequestParam("roomId") Long roomId) {
         try {
+            // jwtAccessToken으로부터 사용자 UID를 추출합니다. -> 가능하다면 허가된 사용자
+            String jwtToken = jwtAccessToken.substring(7);
+            Long userId = jwtTokenValidator.getUserIdFromRefreshToken(jwtToken);
+
             // roomId를 이용해서 -> 방 구성원 테이블에서 , 해당 방 안에 있는 userId, alias 모두 가져온다.
             // 그 중 userId를 이용해 사용자 테이블에서, 사용자의 image를 가져온다.
             // 3가지 정보(userId, alias, image)를 DTO에 담아 리스트로 만들어 반환한다.
@@ -151,14 +162,54 @@ public class PostController {
     //게시글 전체 조회 (in 특정 방)----------------------------------------------------------------------------------------
     //(클라이언트는 요청시 page 값을 같이 param 으로 전달해야한다. 안할시 default 값은 page = 0 이다.)
     @GetMapping(value = "/api/post")
-    public ResponseEntity<Map<String, Object>> getAllPostsInTheRoom(@RequestParam("roomId") Long roomId ,
+    public ResponseEntity<Map<String, Object>> getAllPostsInTheRoom(@RequestHeader("Authorization") String jwtAccessToken,
+                                                                    @RequestParam("roomId") Long roomId ,
                                                                     @PageableDefault(size = 10, sort = "postId", direction = Sort.Direction.DESC) Pageable pageable) {
+        try {
+        // jwtAccessToken으로부터 사용자 UID를 추출합니다. -> 가능하다면 허가된 사용자
+        String jwtToken = jwtAccessToken.substring(7);
+        Long userId = jwtTokenValidator.getUserIdFromRefreshToken(jwtToken);
 
         // postLoadAllDtoList 는 postLoadAllDto 들을 리스트 형태로 가지고 있는 자료구조
         Page<PostLoadAllDto> postLoadAllDtoList = postService.findAllPostsByRoomId(roomId, pageable);  //서비스 객체에서 조회한 데이터 여러개를 DTO 객체에 담아서 List 자료구조에 주입
         Map<String, Object> response = new HashMap<>();
         response.put("boardTotalList", postLoadAllDtoList.getContent());
         return ResponseEntity.ok(response); //이 코드는 맵 객체(response)를 반환합니다.
-    }                                       // 클라이언트는 이 데이터를 JSON 형식으로 받아 사용할 수 있습니다.
+                                            // 클라이언트는 이 데이터를 JSON 형식으로 받아 사용할 수 있습니다.
+        } catch (Exception e) {
+            // 예외가 발생한 경우, 에러 응답을 반환합니다.
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "게시물을 조회하는 도중에 문제가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+
+    }
+
+
+
+    //게시글 전체 조회 (in 마이 페이지)----------------------------------------------------------------------------------------
+    // 사용자 UID가 필요하다. -> postEntity에서 사용자 UID로 조회한 모든 게시글을 가져온다.
+    @GetMapping(value = "/api/post/myPage")
+    public ResponseEntity<Map<String, Object>> getAllPostsInMyPage(@RequestHeader("Authorization") String jwtAccessToken,
+                                                                    @PageableDefault(size = 10, sort = "postId", direction = Sort.Direction.DESC) Pageable pageable) {
+        try {
+            // jwtAccessToken으로부터 사용자 UID를 추출합니다.
+            String jwtToken = jwtAccessToken.substring(7);
+            Long userId = jwtTokenValidator.getUserIdFromRefreshToken(jwtToken);
+
+            // postLoadAllDtoList 는 postLoadAllDto 들을 리스트 형태로 가지고 있는 자료구조
+            Page<PostLoadAllDto> postLoadAllDtoList = postService.findAllPostsByUserId(userId, pageable);  //서비스 객체에서 조회한 데이터 여러개를 DTO 객체에 담아서 List 자료구조에 주입
+            Map<String, Object> response = new HashMap<>();
+            response.put("boardTotalList", postLoadAllDtoList.getContent());
+            return ResponseEntity.ok(response); //이 코드는 맵 객체(response)를 반환합니다.
+
+        } catch (Exception e) {
+            // 예외가 발생한 경우, 에러 응답을 반환합니다.
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "게시물을 조회하는 도중에 문제가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+
+    }
 
 }

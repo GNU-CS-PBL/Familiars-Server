@@ -1,4 +1,4 @@
-package last.demo.Post.repository;
+package last.demo.Post.repository.post;
 
 import last.demo.Post.entity.PostTagEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface PostTagRepository extends JpaRepository<PostTagEntity, Long> {
 
-    List<PostTagEntity> findByPostId(Long postId);
+    List<PostTagEntity> findByPostEntityPostId(Long postId);
 }

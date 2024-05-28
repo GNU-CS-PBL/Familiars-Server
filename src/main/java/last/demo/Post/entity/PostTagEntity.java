@@ -20,13 +20,6 @@ public class PostTagEntity {
     private Long postTageId; // 게시물 태그 고유번호
 
     @Column
-    private Long postId; // 게시물 ID
-
-    @ManyToOne(fetch = FetchType.LAZY) // ManyToOne 관계 설정
-    @JoinColumn(name = "postId", insertable = false, updatable = false) // PostEntity의 postId와 매핑
-    private PostEntity postEntity; // PostEntity를 참조하는 필드
-
-    @Column
     private Long userId; // 태그 하는 사용자 UID
 
     @Column
@@ -41,6 +34,10 @@ public class PostTagEntity {
     @Column
     private Timestamp modifyDate; // 게시물 태그 수정시간
 
+    @ManyToOne(fetch = FetchType.LAZY) // ManyToOne 관계 설정
+    @JoinColumn(name = "post_id") // PostEntity의 postId와 매핑
+    private PostEntity postEntity; // PostEntity를 참조하는 필드
+
 
     //DTO -> Entity
     public static PostTagEntity toPostTagEntity(PostTagDto postTagDto) {
@@ -49,7 +46,14 @@ public class PostTagEntity {
         postTagEntity.setPostTageId(postTagDto.getPostTagId() != null ? postTagDto.getPostTagId() : 0L);
 
         // PostEntity 객체를 생성하여 postEntity 필드에 설정
-        postTagEntity.setPostId(postTagDto.getPostId() != null ? postTagDto.getPostId() : 0L);
+        // 게시글 기본 키 값을 받아와서 PostTagEntity 객체에 설정
+        Long postId = postTagDto.getPostId();
+        if (postId != null) {
+            PostEntity postEntity = new PostEntity();
+            postEntity.setPostId(postId);
+            postTagEntity.setPostEntity(postEntity); // 양방향 관계에서는 이렇게 추가해줘야 한다.
+        }
+
         postTagEntity.setUserId(postTagDto.getUserId() !=null ? postTagDto.getUserId() : 0L);
         postTagEntity.setTaggedUserId(postTagDto.getTaggedUserId() !=null ? postTagDto.getTaggedUserId() : 0L);
         postTagEntity.setRoomId(postTagDto.getRoomId() != null ? postTagDto.getRoomId() : 0L);
