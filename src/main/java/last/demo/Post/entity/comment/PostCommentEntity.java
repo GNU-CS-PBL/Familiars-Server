@@ -3,9 +3,11 @@ package last.demo.Post.entity.comment;
 import jakarta.persistence.*;
 import last.demo.Post.dto.comment.PostCommentDto;
 import last.demo.Post.entity.PostEntity;
+import last.demo.Post.entity.like.postComment.PostCommentLikeEntity;
 import lombok.*;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -48,6 +50,14 @@ public class PostCommentEntity {
     // 테이블에 나타나진 않지만, 자식 댓글 엔티티와의 [1:다] 관계를 지어주는 코드
     @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChildCommentEntity> childComments; // 자식 댓글 목록
+
+    // 부모 댓글 좋아요 관련 ----------------------------------------------------------------------------------------------
+    @Column
+    private Long totalLikeCount; // (부모 댓글) 좋아요 총 갯수
+
+    // 좋아요 엔티티와의 [1:다] 관계를 지어주는 코드(테이블에 나타나진 않는다.)
+    @OneToMany(mappedBy = "postCommentEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PostCommentLikeEntity> postCommentLikeEntities= new ArrayList<>();
 
 
 

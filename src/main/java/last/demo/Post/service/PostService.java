@@ -9,10 +9,10 @@ import last.demo.Post.dto.post.utils.PostLoadAllDto;
 import last.demo.Post.dto.post.utils.PostTagAllDto;
 import last.demo.Post.entity.PostEntity;
 import last.demo.Post.entity.PostTagEntity;
-import last.demo.Post.entity.like.LikeEntity;
-import last.demo.Post.entity.like.UserLikeListEntity;
-import last.demo.Post.repository.like.LikeRepository;
-import last.demo.Post.repository.like.UserLikeListRepository;
+import last.demo.Post.entity.like.post.LikeEntity;
+import last.demo.Post.entity.like.postComment.PostCommentLikeEntity;
+import last.demo.Post.repository.like.post.LikeRepository;
+import last.demo.Post.repository.like.postComment.PostCommentLikeRepository;
 import last.demo.Post.repository.post.PostRepository;
 import last.demo.Post.repository.post.PostTagRepository;
 import last.demo.Room.entity.RoomMemberEntity;
@@ -37,7 +37,7 @@ public class PostService {
     private final UserRepository userRepository;
     private final PostTagRepository postTagRepository;
     private final LikeRepository likeRepository;
-    private final UserLikeListRepository userLikeListRepository;
+    private final PostCommentLikeRepository postCommentLikeRepository;
 
 
     // 게시글을 저장 및 반환하는 메소드
@@ -81,7 +81,7 @@ public class PostService {
         Optional<PostEntity> OptionalPostEntity = postRepository.findById(postId);
 
         // postId를 사용해서 해당 postTagEntity를 조회한다.
-        List<PostTagEntity> postTagEntities = postTagRepository.findByPostId(postId);
+        List<PostTagEntity> postTagEntities = postTagRepository.findByPostEntityPostId(postId);
 
         // postId에 해당하는 방 정보가 존재하는지 확인
         if(OptionalPostEntity.isPresent()) {
@@ -129,7 +129,7 @@ public class PostService {
 
 
 
-    // 게시글을 삭제하는 메소드(1)
+    // 게시글을 삭제하는 메소드
     public void deletePostInfo(Long postId) {
     // roomId를 사용해서 roomEntity를 조회한다.
         Optional<PostEntity> OptionalPostEntity = postRepository.findById(postId);
@@ -149,48 +149,54 @@ public class PostService {
 
 
 
-    // 게시글을 삭제하는 메소드(1-2) -----> 게시글의 postId를 왜래키로 사용하는 다른 Entity들을 찾아 전부 삭제 하는 코드
+    // 게시글과 관련된 다른 테이블 삭제하는 메소드 -----> 게시글의 postId를 왜래키로 사용하는 다른 Entity들을 찾아 전부 삭제 하는 코드
     public void deletePostRelatedInfo(Long postId) {
+        try {
+            // #1. 사용자 태그 테이블 삭제 -----> postId를 사용하여 postTagEntity를 조회한다.
+            List<PostTagEntity> postTagEntities = postTagRepository.findByPostEntityPostId(postId);
 
-
-        // #1. 사용자 태그 테이블 삭제 -----> postId를 사용하여 postTagEntity를 조회한다.
-        List<PostTagEntity> postTagEntities = postTagRepository.findByPostId(postId);
-
-        // 조회된 postTagEntity가 있는지 확인
-        if (!postTagEntities.isEmpty()) {
-            // 조회된 각각의 postTagEntity를 삭제한다.
-            for (PostTagEntity postTagEntity : postTagEntities) {
-                postTagRepository.delete(postTagEntity);
+            // 조회된 postTagEntity가 있는지 확인
+            if (!postTagEntities.isEmpty()) {
+                // 조회된 각각의 postTagEntity를 삭제한다.
+                for (PostTagEntity postTagEntity : postTagEntities) {
+                    postTagRepository.delete(postTagEntity);
+                }
+            } else {
+                // postId에 해당하는 사용자 태그 Entity가 존재하지 않을 경우 예외 처리를 수행합니다.
+                throw new RuntimeException("해당 postId에 해당하는 사용자 태그 Entity가 존재하지 않습니다.");
             }
-        } else {
-            // postId에 해당하는 사용자 태그 Entity가 존재하지 않을 경우 예외 처리를 수행합니다.
-            throw new RuntimeException("해당 postId에 해당하는 사용자 태그 Entity가 존재하지 않습니다.");
-        }
 
 
-        // #2. 좋아요 테이블 삭제
-        //LikeEntity와 PostEntity 간에 양방향 관계가 설정되어 있습니다.
-        //이를 활용하여 LikeEntity를 조회할 때 postId를 사용하는 대신 PostEntity를 이용할 수 있습니다.
-        List<LikeEntity> likeEntities = likeRepository.findByPostEntity_PostId(postId);
-        if (!likeEntities.isEmpty()) {
-            for (LikeEntity likeEntity : likeEntities) {
-                likeRepository.delete(likeEntity);
+            // #2. [게시글 좋아요] 테이블 삭제
+            // LikeEntity와 PostEntity 간에 양방향 관계가 설정되어 있습니다.
+            // 이를 활용하여 LikeEntity를 조회할 때 postId를 사용하는 대신 PostEntity를 이용할 수 있습니다.
+            List<LikeEntity> likeEntities = likeRepository.findByPostEntity_PostId(postId);
+            if (!likeEntities.isEmpty()) {
+                for (LikeEntity likeEntity : likeEntities) {
+                    likeRepository.delete(likeEntity);
+                }
+            } else {
+                throw new RuntimeException("해당 postId에 해당하는 좋아요 Entity가 존재하지 않습니다.");
             }
-        } else {
-            throw new RuntimeException("해당 postId에 해당하는 좋아요 Entity가 존재하지 않습니다.");
-        }
 
-        // #2-2. 사용자 좋아요 리스트 테이블 삭제
-        List<UserLikeListEntity> userLikeListEntities = userLikeListRepository.findByPostIdContains(postId);
-        if (!userLikeListEntities.isEmpty()) {
-            for (UserLikeListEntity userLikeListEntity : userLikeListEntities) {
-                userLikeListRepository.delete(userLikeListEntity);
+            // #3. [부모댓글 좋아요] 테이블 삭제
+            // PostCommentLikeEntity와 PostCommentEntity 간에 양방향 관계가 설정되어 있습니다.
+            // 이를 활용하여 PostCommentLikeEntity를 조회할 때 postId를 사용하는 대신 PostEntity를 이용할 수 있습니다.
+            List<PostCommentLikeEntity> postCommentLikeEntities = postCommentLikeRepository.findByPostCommentEntityParentCommentId(postId);
+            if (!postCommentLikeEntities.isEmpty()) {
+                for (PostCommentLikeEntity postCommentLikeEntity : postCommentLikeEntities) {
+                    postCommentLikeRepository.delete(postCommentLikeEntity);
+                }
+            } else {
+                throw new RuntimeException("해당 postId에 해당하는 부모댓글좋아요 Entity가 존재하지 않습니다.");
             }
-        } else {
-            throw new RuntimeException("해당 postId에 해당하는 사용자 좋아요 리스트 Entity가 존재하지 않습니다.");
+
+        } catch (RuntimeException e) {
+            // 예외가 발생하면 콘솔에 로그를 출력합니다.
+            e.printStackTrace();
+            // 여기서 필요한 다른 예외 처리를 추가할 수 있습니다.
         }
-
-
+        // 예외가 발생하더라도 다음 코드들이 정상적으로 실행됩니다.
     }
 
 
@@ -332,7 +338,7 @@ public class PostService {
                 postLoadAllDto.setImage(userEntity.getImage());
             }
             // #3-3 : postId에 해당하는 모든 postTagEntity를 찾아서 -> taggedUserId를 모두 꺼내서 postLoadAllDto에 List형식으로 넣기
-            List<PostTagEntity> postTagEntityList = postTagRepository.findByPostId(postEntity.getPostId());
+            List<PostTagEntity> postTagEntityList = postTagRepository.findByPostEntityPostId(postEntity.getPostId());
             for (PostTagEntity postTagEntity : postTagEntityList) {
                 postLoadAllDto.addTaggedUserId(postTagEntity.getTaggedUserId()); // 사용자 태그를 추가하는 함수를 적용
             }
@@ -375,7 +381,7 @@ public class PostService {
                 postLoadAllDto.setImage(userEntity.getImage());
             }
             // #3-3 : postId에 해당하는 모든 postTagEntity를 찾아서 -> taggedUserId를 모두 꺼내서 postLoadAllDto에 List형식으로 넣기
-            List<PostTagEntity> postTagEntityList = postTagRepository.findByPostId(postEntity.getPostId());
+            List<PostTagEntity> postTagEntityList = postTagRepository.findByPostEntityPostId(postEntity.getPostId());
             for (PostTagEntity postTagEntity : postTagEntityList) {
                 postLoadAllDto.addTaggedUserId(postTagEntity.getTaggedUserId()); // 사용자 태그를 추가하는 함수를 적용
             }

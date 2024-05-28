@@ -53,6 +53,7 @@ public class CommentController {
             String jwtToken = jwtAccessToken.substring(7);
             Long userId = jwtTokenValidator.getUserIdFromRefreshToken(jwtToken);
 
+
             // parentCommentId 를 이용해서 삭제
             commentService.deletePostCommentInfo(parentCommentId);
 
@@ -63,10 +64,6 @@ public class CommentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("부모댓글을 삭제하는 도중에 문제가 발생했습니다.");
         }
     }
-
-
-    // 부모 댓글 시간순 전체 조회
-    // 대댓글 시간순 전체 조회
 
 
     //대댓글 생성
@@ -116,4 +113,11 @@ public class CommentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("대댓글을 삭제하는 도중에 문제가 발생했습니다.");
         }
     }
+
+
+
+    // 부모 댓글 전체 조회 (특정 게시글의 '댓글 아이콘' 눌렀을 때)
+
+    // 대댓글 시간순 전체 조회
+
 }

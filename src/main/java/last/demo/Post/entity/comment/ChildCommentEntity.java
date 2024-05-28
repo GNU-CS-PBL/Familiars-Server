@@ -3,7 +3,6 @@ package last.demo.Post.entity.comment;
 
 import jakarta.persistence.*;
 import last.demo.Post.dto.comment.ChildCommentDto;
-import last.demo.Post.dto.comment.PostCommentDto;
 import lombok.*;
 
 import java.sql.Timestamp;

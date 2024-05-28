@@ -2,9 +2,8 @@ package last.demo.Post.entity;
 
 import jakarta.persistence.*;
 import last.demo.Post.dto.post.PostDto;
-import last.demo.Post.entity.comment.ChildCommentEntity;
 import last.demo.Post.entity.comment.PostCommentEntity;
-import last.demo.Post.entity.like.LikeEntity;
+import last.demo.Post.entity.like.post.LikeEntity;
 import lombok.*;
 
 import java.sql.Timestamp;
@@ -60,9 +59,9 @@ public class PostEntity {
     @OneToMany(mappedBy = "postEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LikeEntity> likeEntities = new ArrayList<>();
 
-//    // 태그  엔티티와의 [1:다] 관계를 지어주는 코드(테이블에 나타나진 않는다.)
-//    @OneToMany(mappedBy = "postEntity", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<PostTagEntity> postTags = new ArrayList<>();
+    // 태그  엔티티와의 [1:다] 관계를 지어주는 코드(테이블에 나타나진 않는다.)
+    @OneToMany(mappedBy = "postEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PostTagEntity> postTags = new ArrayList<>();
 
     // 부모 댓글 엔티티와의 [1:다] 관계를 지어주는 코드(테이블에 나타나진 않는다.)
     @OneToMany(mappedBy = "postEntity", cascade = CascadeType.ALL, orphanRemoval = true)
