@@ -20,6 +20,7 @@ public class PostLoadAllDto { // 게시글 전체 조회 DTO (in 특정 방)
 
 
     // postEntity 에서 가져오는 요소
+    private Long postId; // 게시물 고유번호
     private String title; // 게시글 제목
     private String content; // 게시글 내용
     private List<String> postImage = new ArrayList<>(); // 게시글 이미지 리스트
