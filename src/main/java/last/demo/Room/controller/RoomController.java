@@ -24,6 +24,7 @@ import java.util.Map;
 @Controller
 public class RoomController {
 
+    // 서비스 관련 출력
     @Autowired
     private RoomService roomService;
 
@@ -70,7 +71,12 @@ public class RoomController {
 
     // #2 방 초대코드 조회------------------------------------------------------------------------------------------------
     @GetMapping(value = "/api/room/InviteCode")
-    public ResponseEntity<RoomInviteCodeDto> getInviteCode(@RequestParam("roomId") Long roomId) {
+    public ResponseEntity<RoomInviteCodeDto> getInviteCode(@RequestHeader("Authorization") String jwtAccessToken,
+                                                           @RequestParam("roomId") Long roomId) {
+        // 방장의 jwt 토큰에서 uid를 추출해서
+        String jwtToken = jwtAccessToken.substring(7);
+        Long userId = jwtTokenValidator.getUserIdFromRefreshToken(jwtToken);
+
         String inviteCode = roomService.getInviteCode(roomId);
         if (inviteCode != null) {
             RoomInviteCodeDto roomInviteCodeDto = new RoomInviteCodeDto(inviteCode);
@@ -214,7 +220,13 @@ public class RoomController {
     // #5 방 목록 조회----------------------------------------------------------------------------------------------------
                      // (클라이언트는 요청시 page 값을 같이 param 으로 전달해야한다. 안할시 default 값은 page = 0 이다.)
     @GetMapping(value = "/api/room")
-    public ResponseEntity<Map<String, Object>> getAllRooms(@PageableDefault(size = 8, sort = "roomId", direction = Sort.Direction.DESC) Pageable pageable) {
+    public ResponseEntity<Map<String, Object>> getAllRooms(@RequestHeader("Authorization") String jwtAccessToken,
+                                                           @PageableDefault(size = 8, sort = "roomId", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        // jwtAccessToken으로부터 사용자 UID를 추출합니다. -> 가능하다면 허가된 사용자
+        String jwtToken = jwtAccessToken.substring(7);
+        Long userId = jwtTokenValidator.getUserIdFromRefreshToken(jwtToken);
+
         Page<RoomLoadAllDto> roomLoadAllDtoList = roomService.roomFindAll(pageable);  //서비스 객체에서 조회한 데이터 여러개를 DTO 객체에 담아서 List 자료구조에 주입
         Map<String, Object> response = new HashMap<>();
         response.put("boardTotalList", roomLoadAllDtoList.getContent());
@@ -224,8 +236,14 @@ public class RoomController {
 
     // #6 방 이미지 수정
     @PutMapping(value = "/api/room/image")
-    public ResponseEntity<Object> updateRoomImage(@RequestParam("roomId") Long roomId, @RequestBody RoomImageDto roomImageDto) {
+    public ResponseEntity<Object> updateRoomImage(@RequestHeader("Authorization") String jwtAccessToken,
+                                                  @RequestParam("roomId") Long roomId, @RequestBody RoomImageDto roomImageDto) {
         try {
+
+            // jwtAccessToken으로부터 사용자 UID를 추출합니다. -> 가능하다면 허가된 사용자
+            String jwtToken = jwtAccessToken.substring(7);
+            Long userId = jwtTokenValidator.getUserIdFromRefreshToken(jwtToken);
+
             // 방 테이블에서 해당 roomId에 해당하는 정보를 찾고 사진 파일을 수정한다.
             String roomImage = roomImageDto.getRoomImage();
             roomService.updateRoomImage(roomId, roomImage);
@@ -244,8 +262,14 @@ public class RoomController {
 
     // # 7 방 이미지 삭제
     @DeleteMapping(value = "/api/room/image")
-    public ResponseEntity<Object> deleteRoomImage(@RequestParam("roomId") Long roomId) {
+    public ResponseEntity<Object> deleteRoomImage(@RequestHeader("Authorization") String jwtAccessToken,
+                                                  @RequestParam("roomId") Long roomId) {
         try {
+
+            // jwtAccessToken으로부터 사용자 UID를 추출합니다. -> 가능하다면 허가된 사용자
+            String jwtToken = jwtAccessToken.substring(7);
+            Long userId = jwtTokenValidator.getUserIdFromRefreshToken(jwtToken);
+
             // 방 테이블에서 해당 roomId에 해당하는 정보를 찾고 사진 파일을 수정한다.
             roomService.deleteRoomImage(roomId);
             Map<String, Object> response = new HashMap<>();
