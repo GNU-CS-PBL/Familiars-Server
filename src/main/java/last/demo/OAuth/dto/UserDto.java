@@ -22,7 +22,6 @@ public class UserDto {
     private String image;
     private String birth;
     private Boolean field2;
-
     private String accessToken; // OAuth 제공자 엑세스 토큰
 
 
