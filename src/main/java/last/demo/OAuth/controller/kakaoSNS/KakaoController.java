@@ -121,10 +121,10 @@ public class KakaoController {
             // saveUserInfo에서 발생한 예외 처리
 
             System.out.println("Exception occurred: " + e.getMessage());
-            // 예외가 발생했을 때 201 Created 응답 코드와 예외 메시지를 반환
+            // 예외가 발생했을 때 401 Unauthorized 응답 코드와 예외 메시지를 반환
             TokenResponseDto errorResponseDto = new TokenResponseDto();
             errorResponseDto.setMessage(e.getMessage());
-            return new ResponseEntity<>(errorResponseDto, HttpStatus.CREATED);
+            return new ResponseEntity<>(errorResponseDto, HttpStatus.UNAUTHORIZED);
         }
 
         System.out.println("idToken : " + idToken); // 위의 try 문이 정상적으로 실행되면, 해당 코드 부터 정상실행된다.
