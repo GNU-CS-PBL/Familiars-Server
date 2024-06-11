@@ -55,12 +55,4 @@ public class JwtAuthenticationFilter {
         }
     }
 
-    //public String getToken(HttpServletRequest request) {
-    //    String authorization = request.getHeader("Authorization"); // Header 부분의 Bearer + jwtAccessToken을 가져온다.
-    //    if (StringUtils.hasText(authorization) && authorization.startsWith("Bearer")) { //Bearer 부분을
-    //        String[] arr = authorization.split(" "); //공백을 기준으로 잘라서 => jwtAccessToken 부분만
-    //        return arr[1]; // 다시 반환해준다.
-    //    }
-    //   return null;
-    //}
 }
