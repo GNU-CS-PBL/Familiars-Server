@@ -16,4 +16,6 @@ public interface KakaoService {
     UserEntity saveUserInfo(UserDto userDto);
 
     boolean isNameAvailable(String name);
+
+    void deleteUserInfo(Long userId);
 }

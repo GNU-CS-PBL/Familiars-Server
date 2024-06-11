@@ -198,19 +198,16 @@ public class KakaoController {
         try {
             // 1. 전달받은 jwtRefreshToken에서 userUID를 추출한다.
             Long userId = jwtTokenValidator.getUserIdFromRefreshToken(refreshTokenDto.getRefreshToken());
-            System.out.println("진짜 출력1");
 
             // 2. 전달받은 jwtRefreshToken를 key값으로 redis에서 userUID를 조회해서 가져온다.
             Long result = redisService.getUserIdFromRefreshToken(refreshTokenDto.getRefreshToken());
 
             System.out.println(result);
-            System.out.println("진짜 출력2");
 
             // 1번과 2번의 값이 같으면 새로운 jwtAccessToken을 생성한다.
             if (userId != null && userId.equals(result)) {
                 String jwtAccessToken = kakaoService.createJwtAccessToken(userId);
 
-                System.out.println("진짜 출력3");
                 // 기존 refresh토큰과 새로 생성된 access 토큰을 응답 본문에 담아서 클라이언트에게 보냄
                 ReissueTokenResponseDto reissueTokenResponseDto = new ReissueTokenResponseDto();
                 reissueTokenResponseDto.setAccessToken(jwtAccessToken);
@@ -238,4 +235,29 @@ public class KakaoController {
         }
     }
 
+    @DeleteMapping(value = "/api/unregister")
+    public ResponseEntity<String> UserUnregister(@RequestHeader("Authorization") String jwtAccessToken, @RequestBody RefreshTokenDto refreshTokenDto) throws Exception {
+        try {
+            // 1. Authorization 헤더에서 JWT 토큰을 추출하고 검증
+            String jwtToken = jwtAccessToken.substring(7);
+            Long userId = jwtTokenValidator.getUserIdFromRefreshToken(jwtToken);
+
+            if (userId == null) {
+                throw new Exception("Invalid JWT token");
+            }
+
+            // 2. 유효한 사용자임을 확인했으므로 데이터베이스에서 사용자 정보를 삭제
+            kakaoService.deleteUserInfo(userId);
+
+            // 3. Redis에서 해당 사용자의 refresh token을 삭제
+            redisService.deleteRefreshToken(refreshTokenDto.getRefreshToken());
+
+            // 4. 성공 메시지 반환
+            return new ResponseEntity<>("User unregistered successfully", HttpStatus.OK);
+        } catch (Exception e) {
+            // 예외 처리
+            System.out.println("Exception occurred: " + e.getMessage());
+            return new ResponseEntity<>("Unregistration failed: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
 }

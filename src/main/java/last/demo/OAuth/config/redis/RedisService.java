@@ -71,5 +71,4 @@ public class RedisService {
         redisTemplate.delete(jwtrefreshToken); // set을 통해서 값을 저장할 때 사용했던, key값인 refreshToken을 이용해서 값userID와 모두 삭제
     }
 
-
 }

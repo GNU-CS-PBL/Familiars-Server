@@ -193,5 +193,12 @@ public class KakaoServiceImpl implements KakaoService {
     public boolean isNameAvailable(String name) {
         return !userRepository.existsByName(name); //주어진 이름이 데이터베이스에 존재하지 않는다면 true를 반환
     }
+
+    //#8 회원탈퇴
+    @Override
+    public void deleteUserInfo(Long userId){
+        userRepository.deleteById(userId);
+    }
+
 }
 
