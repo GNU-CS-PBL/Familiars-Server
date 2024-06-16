@@ -24,8 +24,8 @@ public class JwtTokenProvider {
     private String ISSUER; // 토큰 발급자
 
     //JWT 토큰 만료시간 설정
-    public final Long ACCESS_TOKEN_EXPIRE_COUNT = 43200 * 60 * 1000L; // 60 * 1000L = 1분  ->  2달
-    public final Long REFRESH_TOKEN_EXPIRE_COUNT = 86400 * 60 * 1000L; // 60 * 1000L = 1분  ->  4달
+    public final Long ACCESS_TOKEN_EXPIRE_COUNT = 30 * 60 * 1000L; // 60 * 1000L = 1분  ->  30분
+    public final Long REFRESH_TOKEN_EXPIRE_COUNT = 20160 * 60 * 1000L; // 60 * 1000L = 1분  ->  2주
 
     // jwt access 토큰 생성
     public String createAccessToken(Long userId)  {
